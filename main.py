@@ -24,7 +24,7 @@ llm_model = "gpt-oss-120b"
 if "llm_model" not in st.session_state:
     st.session_state["llm_model"] = llm_model
 
-st.title("나의 AI 친구")
+st.title("AI챗봇 만들기 프로젝트")
 
 # 시스템 메시지 설정
 if "messages" not in st.session_state:
