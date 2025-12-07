@@ -2,6 +2,9 @@ from openai import OpenAI
 import streamlit as st
 import os
 
+# 페이지 레이아웃 설정 (사이드바 항상 펼치기)
+st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+
 # Cerebras API 클라이언트 초기화
 client = OpenAI(
     base_url="https://api.cerebras.ai/v1",
@@ -14,7 +17,7 @@ if "llm_model" not in st.session_state:
     st.session_state["llm_model"] = llm_model
 
 # --------------------------------------------
-# 사이드바: 챗봇 설정 고정 영역
+# 사이드바 (설정 메뉴)
 # --------------------------------------------
 st.sidebar.title("설정 메뉴")
 
@@ -36,7 +39,7 @@ mode = st.sidebar.selectbox(
 )
 
 # --------------------------------------------
-# 모드 프롬프트 함수
+# 모드별 시스템 프롬프트
 # --------------------------------------------
 def get_system_prompt(mode):
     if mode == "전문가 컨설턴트":
@@ -54,15 +57,14 @@ def get_system_prompt(mode):
     elif mode == "무한 질문 어린이":
         return "당신은 5살 어린이입니다. 모든 말에 '왜?'라고 물어보세요."
     elif mode == "평행우주 탐험가":
-        return "당신은 평행우주 탐험가입니다. 현실 설명 뒤 평행우주 버전의 설명도 추가하세요."
+        return "당신은 평행우주 탐험가입니다. 현실 설명 뒤 평행우주 버전을 추가하세요."
     elif mode == "재즈 즉흥 연주자":
         return "당신은 재즈 즉흥 연주자처럼 변주하며 답변하세요."
     elif mode == "타임트래블 역사학자":
-        return "당신은 시간여행 역사학자입니다. 과거-현재-미래 관점에서 설명하세요."
+        return "당신은 시간여행 역사학자입니다. 과거-현재-미래 순으로 설명하세요."
     else:
         return "당신은 친절한 AI 조력자입니다."
 
-# 현재 선택 모드의 프롬프트
 system_prompt = get_system_prompt(mode)
 
 # --------------------------------------------
@@ -70,7 +72,7 @@ system_prompt = get_system_prompt(mode)
 # --------------------------------------------
 st.title("AI챗봇 만들기 프로젝트")
 
-# session_state 초기화
+# 메시지 초기화
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": get_system_prompt("기본 모드")}
@@ -90,5 +92,21 @@ for message in st.session_state.messages:
 # 사용자 입력
 # --------------------------------------------
 user_input = st.chat_input("메시지를 입력하세요.")
+
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
+
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    with st.chat_message("assistant"):
+        stream = client.chat.completions.create(
+            model=st.session_state["llm_model"],
+            messages=st.session_state.messages,
+            temperature=0.7,
+            max_completion_tokens=1000,
+            stream=True
+        )
+        response = st.write_stream(stream)
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
