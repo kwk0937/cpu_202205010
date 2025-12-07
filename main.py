@@ -13,9 +13,31 @@ llm_model = "gpt-oss-120b"
 if "llm_model" not in st.session_state:
     st.session_state["llm_model"] = llm_model
 
-st.title("AI챗봇 만들기 프로젝트")
+# --------------------------------------------
+# 사이드바: 챗봇 설정 고정 영역
+# --------------------------------------------
+st.sidebar.title("설정 메뉴")
 
-# 2) 모드별 프롬프트 제공 함수 (위치 유지)
+mode = st.sidebar.selectbox(
+    "대화 모드 선택",
+    [
+        "기본 모드",
+        "전문가 컨설턴트",
+        "친구 같은 조언자",
+        "소크라테스식 튜터",
+        "작업 효율 비서",
+        "스토리텔러",
+        "악마의 변호인",
+        "무한 질문 어린이",
+        "평행우주 탐험가",
+        "재즈 즉흥 연주자",
+        "타임트래블 역사학자"
+    ]
+)
+
+# --------------------------------------------
+# 모드 프롬프트 함수
+# --------------------------------------------
 def get_system_prompt(mode):
     if mode == "전문가 컨설턴트":
         return "당신은 20년 경력의 마케팅 전략 컨설턴트입니다. 데이터 기반 구체적 전략을 제시하세요."
@@ -40,72 +62,33 @@ def get_system_prompt(mode):
     else:
         return "당신은 친절한 AI 조력자입니다."
 
+# 현재 선택 모드의 프롬프트
+system_prompt = get_system_prompt(mode)
 
-# 3) 메시지 상태 초기화 (모드보다 먼저 실행되면 안 됨)
+# --------------------------------------------
+# 메인 화면
+# --------------------------------------------
+st.title("AI챗봇 만들기 프로젝트")
+
+# session_state 초기화
 if "messages" not in st.session_state:
-    # 최초 실행 시 기본 모드 system prompt를 넣어둔다
     st.session_state.messages = [
         {"role": "system", "content": get_system_prompt("기본 모드")}
     ]
 
+# 모드 변경 시 시스템 메시지 갱신
+if st.session_state.messages[0]["content"] != system_prompt:
+    st.session_state.messages[0]["content"] = system_prompt
 
-# 4) 기존 대화 출력
+# 기존 대화 출력
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# -------------------------------
-# 여기부터 아래로 모드 선택 UI 이동
-# -------------------------------
-
-st.divider()
-st.write("대화 설정")
-
-mode = st.selectbox(
-    "대화 모드를 선택하세요:",
-    [
-        "기본 모드",
-        "전문가 컨설턴트",
-        "친구 같은 조언자",
-        "소크라테스식 튜터",
-        "작업 효율 비서",
-        "스토리텔러",
-        "악마의 변호인",
-        "무한 질문 어린이",
-        "평행우주 탐험가",
-        "재즈 즉흥 연주자",
-        "타임트래블 역사학자"
-    ]
-)
-
-# 현재 선택된 프롬프트
-system_prompt = get_system_prompt(mode)
-
-# 시스템 프롬프트 변경이 필요할 경우 업데이트
-if st.session_state.messages[0]["content"] != system_prompt:
-    st.session_state.messages[0]["content"] = system_prompt
-
-# -------------------------------
-# 모드 선택 UI 바로 아래 입력창
-# -------------------------------
-
-user_input = st.chat_input("무엇이든 물어보세요.")
-
+# --------------------------------------------
+# 사용자 입력
+# --------------------------------------------
+user_input = st.chat_input("메시지를 입력하세요.")
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
-    
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
-    with st.chat_message("assistant"):
-        stream = client.chat.completions.create(
-            model=st.session_state["llm_model"],
-            messages=st.session_state.messages,
-            temperature=0.7,
-            max_completion_tokens=1000,
-            stream=True
-        )
-        response = st.write_stream(stream)
-
-    st.session_state.messages.append({"role": "assistant", "content": response})
