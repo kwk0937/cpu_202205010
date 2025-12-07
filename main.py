@@ -58,16 +58,15 @@ def get_system_prompt(mode):
     else:
         return "당신은 친절한 AI 조력자입니다."
 
-# 현재 선택된 모드의 system prompt
 system_prompt = get_system_prompt(mode)
 
-# 3) 메시지 저장소 초기화 (최초 1회만)
+# 3) 메시지 상태 초기화
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": system_prompt}
     ]
 
-# 4) 모드가 바뀌면 system prompt만 갱신
+# 4) 모드 변경 시 시스템 메시지만 갱신
 if st.session_state.messages[0]["content"] != system_prompt:
     st.session_state.messages[0]["content"] = system_prompt
 
@@ -77,8 +76,9 @@ for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# 6) 사용자 입력처리
-if user_input := st.chat_input("무엇이든 물어보세요."):
+# 6) 사용자 입력 처리
+user_input = st.chat_input("무엇이든 물어보세요.")
+if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
     
     with st.chat_message("user"):
@@ -95,12 +95,3 @@ if user_input := st.chat_input("무엇이든 물어보세요."):
         response = st.write_stream(stream)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
-
-
-# Streamlit 실행용
-if __name__ == "__main__":
-    import subprocess
-    import sys
-    if not os.environ.get("STREAMLIT_RUNNING"):
-        os.environ["STREAMLIT_RUNNING"] = "1"
-        subprocess.run([sys.executable, "-m", "streamlit", "run", __file__])
