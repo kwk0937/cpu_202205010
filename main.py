@@ -4,6 +4,25 @@ from openai import OpenAI
 import streamlit as st
 import os
 
+import streamlit as st
+
+mode = st.selectbox(
+    "대화 모드를 선택하세요:",
+    [
+        "기본 모드",
+        "전문가 컨설턴트",
+        "친구 같은 조언자",
+        "소크라테스식 튜터",
+        "작업 효율 비서",
+        "스토리텔러",
+        "악마의 변호인",
+        "무한 질문 어린이",
+        "평행우주 탐험가",
+        "재즈 즉흥 연주자",
+        "타임트래블 역사학자"
+    ]
+)
+
 # Cerebras API를 사용하여 OpenAI API 클라이언트 초기화
 client = OpenAI(
     base_url="https://api.cerebras.ai/v1",
